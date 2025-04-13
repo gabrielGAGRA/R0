@@ -41,18 +41,19 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
     # Definindo os valores para formatação dos textos
     texto_eq = (
         f"Equações fundamentais do equilíbrio\n\n"
-        "----- I. Equilíbrio Horizontal -----\n"
+        "I. Equilíbrio Horizontal\n"
         "Fh = 0\n"
         f"Hc = - Ha - Hd = {-Ha - Hd} kN\n\n"
-        "----- II. Equilíbrio Vertical -----\n"
+        "II. Equilíbrio Vertical\n"
         "Fv = 0\n"
         f"Vb + Vc = - Vbc = {-Pbc*3} kN\n\n"
-        "----- III. Equilíbrio de Momentos -----\n"
+        "III. Equilíbrio de Momentos\n"
         "Mc = 0\n"
         f"Vb = (Vbc * 3/2 - Hd * 1 - Mc) / 3 = ({Vb} kN)\n"
         f"N = Fh_barra + Ha = ({Ha} kN)\n"
         f"V(x) = {sp.pretty(V)}  kN\n"
-        f"M(x) = {sp.pretty(M)}  kN·m\n"
+        f"M(x) = {sp.pretty(M)}  kN·m\n\n"
+        "\n*Grau de estatisticidade da estrutura: Isostático"
     )
 
     # Definindo os pontos da estrutura
@@ -74,63 +75,64 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
     # Marcação dos nós com legenda:
     for point, label, dx, dy in zip(
         [A, B, C, D],
-        ["A\n(Apoio Fixo)", "B\n(Apoio Rolante)", "C\n(Apoio Articulado)", "D"],
-        [-0.2, -0.05, 0.15, 0.1],
-        [-0.2, -0.2, -0.2, 0.1],
+        ["A", "B\n(Apoio Simples)", "C\n(Apoio Articulado)", "D"],
+        [-0.1, -0.05, 0.15, 0.1],
+        [-0.2, 0.1, 0.1, 0.1],
     ):
         ax1.plot(point[0], point[1], "ko")
         ax1.text(point[0] + dx, point[1] + dy, label, fontsize=10, ha="center")
 
-    # Representação do apoio fixo em A
+    # Apoio articulado em C
     ax1.add_patch(
         patches.Polygon(
-            [[A[0] - 0.3, A[1] - 0.3], [A[0] + 0.3, A[1] - 0.3], [A[0], A[1]]],
+            [[C[0] - 0.3, C[1] - 0.5], [C[0] + 0.3, C[1] - 0.5], [C[0], C[1]]],
             closed=True,
             fill=None,
             edgecolor="green",
         )
     )
-    # Representação do apoio rolante em B
+
+    # Apoio Simples em B
     ax1.add_patch(
         patches.Polygon(
-            [[B[0] - 0.3, B[1] - 0.3], [B[0] + 0.3, B[1] - 0.3], [B[0], B[1]]],
+            [[B[0] - 0.3, B[1] - 0.5], [B[0] + 0.3, B[1] - 0.5], [B[0], B[1]]],
             closed=True,
             fill=None,
             edgecolor="blue",
         )
     )
     ax1.add_patch(
-        patches.Ellipse((B[0], B[1] - 0.45), 0.2, 0.15, fill=None, edgecolor="blue")
+        patches.Ellipse((B[0], B[1] - 0.6), 0.2, 0.15, fill=None, edgecolor="blue")
     )
 
-    # Força Ha em A (horizontal para a esquerda)
+    # Força de Ha em A (horizontal)
     ax1.annotate(
         "",
         xy=(A[0] - 0.5, A[1]),
         xytext=(A[0], A[1]),
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(A[0] - 0.7, A[1] + 0.1, f"{Ha} kN", color="red")
+    ax1.text(A[0] - 0.6, A[1] + 0.1, f"{Ha} kN", color="red")
 
-    # Força vertical Hd em D (aqui usamos seta horizontal para Hd conforme o exemplo)
+    # Força horizontal Hd em D
     ax1.annotate(
         "",
         xy=(D[0] + 0.5, D[1]),
         xytext=(D[0], D[1]),
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(D[0] + 0.7, D[1] + 0.1, f"{-Hd} kN", color="red")
+    ax1.text(D[0] + 0.3, D[1] + 0.1, f"{-Hd} kN", color="red")
 
-    # Carregamento distribuído Pbc entre B e C
+    # Carregamento distribuído entre B e C
     for i in range(4):
-        xi = 0.5 + i * (2.0 / 3)
+        x = 0.5 + i * (2.0 / 3)
         ax1.annotate(
             "",
-            xy=(xi, 0),
-            xytext=(xi, 0.5),
+            xy=(x, 0),  # Changed end point to y=0
+            xytext=(x, 0.5),  # Start point remains at y=0.5
             arrowprops=dict(facecolor="blue", arrowstyle="->", lw=1),
         )
-    ax1.text(1.5, 0.6, f"{-Pbc} kN/m\ndistribuído", ha="center", color="blue")
+    ax1.text(1.5, 0.4, f"{-Pbc} kN/m\ndistribuído", ha="center", color="blue")
 
     ax1.set_xlim(-2, 4)
     ax1.set_ylim(-1.5, 2)
@@ -147,7 +149,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
 
 
 # ================== STREAMLIT APP ==================
-st.title("Análise Estrutural com Visualização e PDF")
+st.title("Análise Estrutural Interativa")
 
 st.sidebar.header("Entrada de Dados")
 Ha = st.sidebar.number_input("Força horizontal em A (Ha)", value=1.0, step=0.1)
