@@ -6,39 +6,35 @@ import io
 
 
 def resolver_estrutura(Ha, Hd, Pbc):
-    # CÁLCULOS SIMBÓLICOS E NUMÉRICOS
     # Equilíbrio Horizontal
     Fh = 0
-    Hc = Fh - Ha - Hd  # ou equivalente: Hc = -Ha - Hd
+    Hc = Fh - Ha - Hd
 
     # Equilíbrio Vertical
     Fv = 0
     Abc = 3
-    Vbc = Pbc * Abc  # carregamento total entre B e C
-    Vb_Vc = Fv - Vbc  # ou Vb+Vc = - Vbc
+    Vbc = Pbc * Abc
+    Vb_Vc = Fv - Vbc
 
     # Equilíbrio de Momentos
     Mc = 0
     Vb = (Vbc * 3 / 2 - Hd * 1 - Mc) / 3
     Vc = Vb_Vc - Vb
 
-    # Outros cálculos
+    # N, V, M
     Fh_barra = 0
-    N = Fh_barra + Ha  # normal axial na barra
-
-    Fv_barra = 0
+    N = Fh_barra + Ha
     x = sp.Symbol("x")
-    V = Fv_barra + Vb * (1 - x)  # diagrama de forças cortantes (simplificado)
-    M = -sp.integrate(V, x)  # diagrama de momentos
+    Fv_barra = 0
+    V = Fv_barra + Vb * (1 - x)
+    M = -sp.integrate(V, x)
 
     return Hc, Vb, Vc, N, sp.simplify(V), sp.simplify(M)
 
 
 def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
-    # Resolver os cálculos
     Hc, Vb, Vc, N, V, M = resolver_estrutura(Ha, Hd, Pbc)
 
-    # Definindo os valores para formatação dos textos
     texto_eq = (
         f"Equações fundamentais do equilíbrio\n\n"
         "I. Equilíbrio Horizontal\n"
@@ -56,23 +52,22 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
         "\n*Grau de estatisticidade da estrutura: Isostático"
     )
 
-    # Definindo os pontos da estrutura
+    # Pontos da estrutura
     A = (-1, 0)
     B = (0, 0)
     C = (3, 0)
     D = (3, 1)
 
-    # Criar figura com dois subplots (um para a estrutura, outro para as equações)
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=(10, 9), gridspec_kw={"height_ratios": [2, 1]}
     )
 
-    # ---------- Plot da Estrutura (ax1) ----------
+    # Plot da estrutura
     ax1.plot([A[0], B[0]], [A[1], B[1]], "k-", linewidth=2)  # A-B
     ax1.plot([B[0], C[0]], [B[1], C[1]], "k-", linewidth=2)  # B-C
     ax1.plot([C[0], D[0]], [C[1], D[1]], "k-", linewidth=2)  # C-D
 
-    # Marcação dos nós com legenda:
+    # Legenda:
     for point, label, dx, dy in zip(
         [A, B, C, D],
         ["A", "B\n(Apoio Simples)", "C\n(Apoio Articulado)", "D"],
@@ -92,7 +87,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
         )
     )
 
-    # Apoio Simples em B
+    # Apoio simples em B
     ax1.add_patch(
         patches.Polygon(
             [[B[0] - 0.3, B[1] - 0.5], [B[0] + 0.3, B[1] - 0.5], [B[0], B[1]]],
@@ -128,8 +123,8 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
         x = 0.5 + i * (2.0 / 3)
         ax1.annotate(
             "",
-            xy=(x, 0),  # Changed end point to y=0
-            xytext=(x, 0.5),  # Start point remains at y=0.5
+            xy=(x, 0),
+            xytext=(x, 0.5),
             arrowprops=dict(facecolor="blue", arrowstyle="->", lw=1),
         )
     ax1.text(1.5, 0.4, f"{-Pbc} kN/m\ndistribuído", ha="center", color="blue")
@@ -140,7 +135,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
     ax1.set_title("Representação Estrutural e Forças")
     ax1.grid(True)
 
-    # ---------- Exibição das Equações (ax2) ----------
+    # Plot das equações
     ax2.axis("off")
     ax2.text(0, 1, texto_eq, fontsize=11, family="monospace", va="top")
 
@@ -148,7 +143,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc):
     return fig
 
 
-# ================== STREAMLIT APP ==================
+# Streamlit
 st.title("Análise Estrutural Interativa")
 
 st.sidebar.header("Entrada de Dados")
@@ -163,12 +158,10 @@ Pbc = st.sidebar.number_input(
 )
 
 if st.sidebar.button("Gerar Análise"):
-    # Gerar o gráfico com a estrutura e as equações
     fig = plot_estrutura_e_equacoes(Ha, Hd, Pbc)
 
     st.pyplot(fig)
 
-    # Salvar a figura em PDF e permitir download
     pdf_bytes = io.BytesIO()
     fig.savefig(pdf_bytes, format="pdf")
     pdf_bytes.seek(0)
