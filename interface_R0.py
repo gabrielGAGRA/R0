@@ -25,7 +25,7 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
 
     # === 2. Equilíbrio Vertical ===
     # Carga distribuída total entre B e C:
-    Vbc = Pbc * L_bc         # (kN)
+    Vbc = Pbc * L_bc  # (kN)
     # Como Fv = 0, então Vb + Vc + Vbc = 0 → Vb + Vc = -Vbc
     Vb_Vc = -Vbc
 
@@ -126,7 +126,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         [C[0], C[1]],
     ]
     ax1.add_patch(
-        patches.Polygon(tri_c, closed=True, fill=None, edgecolor="green",linewidth=2)
+        patches.Polygon(tri_c, closed=True, fill=None, edgecolor="green", linewidth=2)
     )
 
     # Apoio simples em B (triângulo + elipse)
@@ -135,17 +135,39 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         [B[0] + 0.3, B[1] - 0.5],
         [B[0], B[1]],
     ]
-    ax1.add_patch(patches.Polygon(tri_b, closed=True, fill=None, edgecolor="blue",linewidth=2))
+    ax1.add_patch(
+        patches.Polygon(tri_b, closed=True, fill=None, edgecolor="blue", linewidth=2)
+    )
     # parâmetros da elipse
     ellipse_w, ellipse_h = 0.2, 0.15
     ellipse_y = B[1] - 0.6
-    offset = ellipse_w * 0.6  # distância horizontal entre elas (ajuste conforme preferir)
+    offset = (
+        ellipse_w * 0.6
+    )  # distância horizontal entre elas (ajuste conforme preferir)
 
     # elipse da esquerda
-    ax1.add_patch(patches.Ellipse((B[0] - offset, ellipse_y),ellipse_w,ellipse_h,fill=None,edgecolor="blue",linewidth=2))
+    ax1.add_patch(
+        patches.Ellipse(
+            (B[0] - offset, ellipse_y),
+            ellipse_w,
+            ellipse_h,
+            fill=None,
+            edgecolor="blue",
+            linewidth=2,
+        )
+    )
 
     # elipse da direita
-    ax1.add_patch(patches.Ellipse((B[0] + offset, ellipse_y),ellipse_w,ellipse_h,fill=None,edgecolor="blue",linewidth=2))
+    ax1.add_patch(
+        patches.Ellipse(
+            (B[0] + offset, ellipse_y),
+            ellipse_w,
+            ellipse_h,
+            fill=None,
+            edgecolor="blue",
+            linewidth=2,
+        )
+    )
 
     # Força horizontal Ha em A (seta para a esquerda → valor positivo Ha aponta para A)
     ax1.annotate(
@@ -219,15 +241,9 @@ Pbc = st.sidebar.number_input(
 )
 
 # 2. Dimensões da estrutura
-L_ab = st.sidebar.number_input(
-    "Comprimento AB (L_ab) [m]", value=1.0, step=0.1
-)
-L_bc = st.sidebar.number_input(
-    "Comprimento BC (L_bc) [m]", value=3.0, step=0.1
-)
-h_cd = st.sidebar.number_input(
-    "Altura CD (h_cd) [m]", value=1.0, step=0.1
-)
+L_ab = st.sidebar.number_input("Comprimento AB (L_ab) [m]", value=1.0, step=0.1)
+L_bc = st.sidebar.number_input("Comprimento BC (L_bc) [m]", value=3.0, step=0.1)
+h_cd = st.sidebar.number_input("Altura CD (h_cd) [m]", value=1.0, step=0.1)
 
 with st.spinner("Carregando análise..."):
     fig = plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd)
