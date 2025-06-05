@@ -231,7 +231,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.30,
-        r"$V(x) = %s \;\;(\mathrm{kN})$" % sp.pretty(V),
+        r"$V(x) = %s \;\;(\mathrm{kN})$" % sp.pretty(sp.simplify(sp.N(V, 2))),
         fontsize=12,
         family="serif",
         va="top",
@@ -240,7 +240,8 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.15,
-        r"$M(x) = %s \;\;(\mathrm{kN}\cdot\mathrm{m})$" % sp.pretty(M),
+        r"$M(x) = %s \;\;(\mathrm{kN}\cdot\mathrm{m})$"
+        % sp.pretty(sp.simplify(sp.N(M, 2))),
         fontsize=12,
         family="serif",
         va="top",
