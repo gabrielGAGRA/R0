@@ -132,24 +132,28 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     # Força horizontal Ha em A (seta para a esquerda → valor positivo Ha aponta para A)
     ax1.annotate(
         "",
-        xy=(A[0] - 0.5, A[1]),
-        xytext=(A[0], A[1]),
+        xy=(round(A[0] - 0.5, 2), round(A[1], 2)),
+        xytext=(round(A[0], 2), round(A[1], 2)),
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(A[0] - 0.6, A[1] + 0.1, f"{round(Ha, 2)} kN", color="red")
+    ax1.text(
+        round(A[0] - 0.6, 2), round(A[1] + 0.1, 2), f"{round(Ha, 2)} kN", color="red"
+    )
 
     # Força horizontal Hd em D (seta para a direita se Hd > 0)
     ax1.annotate(
         "",
-        xy=(D[0] + 0.5, D[1]),
-        xytext=(D[0], D[1]),
+        xy=(round(D[0] + 0.5, 2), round(D[1], 2)),
+        xytext=(round(D[0], 2), round(D[1], 2)),
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(D[0] + 0.3, D[1] + 0.1, f"{round(-Hd, 2)} kN", color="red")
+    ax1.text(
+        round(D[0] + 0.3, 2), round(D[1] + 0.1, 2), f"{round(-Hd, 2)} kN", color="red"
+    )
 
     # Carga distribuída entre B e C: desenhar 4 setas igualmente espaçadas
     for i in range(4):
-        x_placa = (i + 1) * (L_bc / 5)  # divide em 5 partes, usa 4 setas
+        x_placa = round((i + 1) * (L_bc / 5), 2)  # divide em 5 partes, usa 4 setas
         ax1.annotate(
             "",
             xy=(x_placa, 0),
@@ -157,16 +161,16 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
             arrowprops=dict(facecolor="blue", arrowstyle="->", lw=1),
         )
     ax1.text(
-        L_bc / 2,
-        0.4,
+        round(L_bc / 2, 2),
+        round(0.4, 2),
         f"{round(-Pbc, 2)} kN/m\nDistribuído",
         ha="center",
         color="blue",
     )
 
     # Ajustar limites do gráfico para acomodar parâmetros
-    ax1.set_xlim(-L_ab - 1, L_bc + 1)
-    ax1.set_ylim(-1.5, h_cd + 1)
+    ax1.set_xlim(round(-L_ab - 1, 2), round(L_bc + 1, 2))
+    ax1.set_ylim(round(-1.5, 2), round(h_cd + 1, 2))
     ax1.set_aspect("equal")
     ax1.set_title("Representação Estrutural e Forças")
     ax1.grid(True)
@@ -176,52 +180,81 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
 
     # Título em negrito (fonte serif)
     ax2.text(
-        0, 1.00,
+        0,
+        1.00,
         "Equações Fundamentais do Equilíbrio",
-        fontsize=14, fontweight="bold", family="serif", va="top"
+        fontsize=14,
+        fontweight="bold",
+        family="serif",
+        va="top",
     )
 
     ax2.text(
-        0, 0.90,
-        r"$F_h = 0 \;\Longrightarrow\; H_c = -\,H_a - H_d \;=\; %g\;\mathrm{kN}$" % round(-Ha - Hd, 2),
-        fontsize=12, family="serif", va="top"
+        0,
+        0.90,
+        r"$F_h = 0 \;\Longrightarrow\; H_c = -\,H_a - H_d \;=\; %g\;\mathrm{kN}$"
+        % round(-Ha - Hd, 2),
+        fontsize=12,
+        family="serif",
+        va="top",
     )
 
     ax2.text(
-        0, 0.75,
-        r"$F_v = 0 \;\Longrightarrow\; V_b + V_c = -\,V_{bc} \;=\; %g\;\mathrm{kN}$" % round(-Pbc * L_bc, 2),
-        fontsize=12, family="serif", va="top"
+        0,
+        0.75,
+        r"$F_v = 0 \;\Longrightarrow\; V_b + V_c = -\,V_{bc} \;=\; %g\;\mathrm{kN}$"
+        % round(-Pbc * L_bc, 2),
+        fontsize=12,
+        family="serif",
+        va="top",
     )
 
     ax2.text(
-        0, 0.60,
-        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{V_{bc}\,(L_{bc}/2) \;-\; H_d\,h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$" % round(Vb, 2),
-        fontsize=12, family="serif", va="top"
+        0,
+        0.60,
+        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{V_{bc}\,(L_{bc}/2) \;-\; H_d\,h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$"
+        % round(Vb, 2),
+        fontsize=12,
+        family="serif",
+        va="top",
     )
 
     ax2.text(
-        0, 0.45,
+        0,
+        0.45,
         r"$N = H_a \;=\; %g\;\mathrm{kN}$" % round(Ha, 2),
-        fontsize=12, family="serif", va="top"
+        fontsize=12,
+        family="serif",
+        va="top",
     )
 
     ax2.text(
-        0, 0.30,
+        0,
+        0.30,
         r"$V(x) = %s \;\;(\mathrm{kN})$" % sp.pretty(V),
-        fontsize=12, family="serif", va="top"
+        fontsize=12,
+        family="serif",
+        va="top",
     )
 
     ax2.text(
-        0, 0.15,
+        0,
+        0.15,
         r"$M(x) = %s \;\;(\mathrm{kN}\cdot\mathrm{m})$" % sp.pretty(M),
-        fontsize=12, family="serif", va="top"
+        fontsize=12,
+        family="serif",
+        va="top",
     )
 
     # Frase final em itálico (fonte serif)
     ax2.text(
-        0, 0.05,
+        0,
+        0.05,
         "Grau de estatisticidade: Isostático",
-        fontsize=11, family="serif", fontstyle="italic", va="top"
+        fontsize=11,
+        family="serif",
+        fontstyle="italic",
+        va="top",
     )
 
     plt.tight_layout()
@@ -250,15 +283,9 @@ Pbc = st.sidebar.number_input(
 )
 
 # 2. Dimensões da estrutura
-L_ab = st.sidebar.number_input(
-    "Comprimento AB (L_ab) [m]", value=1.0, step=0.1
-)
-L_bc = st.sidebar.number_input(
-    "Comprimento BC (L_bc) [m]", value=3.0, step=0.1
-)
-h_cd = st.sidebar.number_input(
-    "Altura CD (h_cd) [m]", value=1.0, step=0.1
-)
+L_ab = st.sidebar.number_input("Comprimento AB (L_ab) [m]", value=1.0, step=0.1)
+L_bc = st.sidebar.number_input("Comprimento BC (L_bc) [m]", value=3.0, step=0.1)
+h_cd = st.sidebar.number_input("Altura CD (h_cd) [m]", value=1.0, step=0.1)
 
 with st.spinner("Carregando análise..."):
     fig = plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd)
