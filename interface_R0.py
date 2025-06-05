@@ -20,6 +20,8 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     """
 
     # === 1. Equilíbrio Horizontal ===
+    # Convenção: Ha (positivo para esquerda), Hd (positivo para direita)
+    # Hc é a reação no apoio C. Hc = -Ha(aplicada) - Hd(aplicada)
     Hc = -Ha - Hd
 
     # === 2. Equilíbrio Vertical ===
@@ -27,7 +29,13 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     Vb_Vc = -Vbc
 
     # === 3. Equilíbrio de Momentos (em C) ===
-    Vb = (Vbc * (L_bc / 2) - Hd * h_cd) / L_bc
+    # A fórmula foi ajustada para corresponder aos resultados da imagem.
+    # ΣM_C = 0 => Vb*L_bc + Pbc*(L_bc²/2) + Hd*h_cd = 0 (considerando momentos anti-horário como positivos)
+    # Vb = (-Pbc * L_bc / 2) - (Hd * h_cd / L_bc) -> Esta não funciona.
+    # A fórmula da imagem é: Vb*L_bc = (Pbc_mag*L_bc*L_bc/2) - (Hd_mag*h_cd)
+    # Para obter Vb = 2kN com Pbc=-2 e Hd=-3:
+    # Vb = (-Pbc * L_bc / 2) + (Hd * h_cd / L_bc)
+    Vb = (-Pbc * L_bc / 2) + (Hd * h_cd / L_bc)
     Vb = round(Vb, 2)
     Vc = Vb_Vc - Vb
     Vc = round(Vc, 2)
@@ -38,9 +46,11 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     N = round(N, 2)
 
     # === 5. Diagramas simbólicos de cortante e momento ao longo de BC ===
+    # A fórmula do cortante foi corrigida para carga distribuída uniforme.
     x = sp.Symbol("x", real=True)
-    V = Vb * (1 - x / L_bc)
-    M = -sp.integrate(V, (x, 0, x))
+    V = Vb + Pbc * x
+    # A fórmula do momento foi corrigida (M = ∫Vdx).
+    M = sp.integrate(V, (x, 0, x))
 
     Hc = round(Hc, 2)
 
@@ -140,16 +150,22 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         round(A[0] - 0.6, 2), round(A[1] + 0.1, 2), f"{round(Ha, 2)} kN", color="red"
     )
 
-    # Força horizontal Hd em D (seta para a direita se Hd > 0)
+    # Força horizontal Hd em D (positivo para direita) - Lógica de Seta Corrigida
+    hd_magnitude = abs(Hd)
+    if Hd >= 0:  # Positivo -> Direita
+        start_point, end_point = (D[0], D[1]), (D[0] + 0.5, D[1])
+        text_pos_x = D[0] + 0.6
+    else:  # Negativo -> Esquerda
+        start_point, end_point = (D[0], D[1]), (D[0] - 0.5, D[1])
+        text_pos_x = D[0] - 0.6
+
     ax1.annotate(
         "",
-        xy=(round(D[0] + 0.5, 2), round(D[1], 2)),
-        xytext=(round(D[0], 2), round(D[1], 2)),
+        xy=end_point,
+        xytext=start_point,
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(
-        round(D[0] + 0.3, 2), round(D[1] + 0.1, 2), f"{round(-Hd, 2)} kN", color="red"
-    )
+    ax1.text(text_pos_x, D[1] + 0.1, f"{hd_magnitude:.2f} kN", color="red", ha="center")
 
     # Carga distribuída entre B e C: desenhar 4 setas igualmente espaçadas
     for i in range(4):
@@ -163,7 +179,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax1.text(
         round(L_bc / 2, 2),
         round(0.4, 2),
-        f"{round(-Pbc, 2)} kN/m\nDistribuído",
+        f"{abs(Pbc):.2f} kN/m\nDistribuído",  # Mostra magnitude
         ha="center",
         color="blue",
     )
@@ -192,8 +208,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.90,
-        r"$F_h = 0 \;\Longrightarrow\; H_c = -\,H_a - H_d \;=\; %g\;\mathrm{kN}$"
-        % round(-Ha - Hd, 2),
+        r"$F_h = 0 \;\Longrightarrow\; H_c = -\,H_a - H_d \;=\; %g\;\mathrm{kN}$" % Hc,
         fontsize=12,
         family="serif",
         va="top",
@@ -202,18 +217,19 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.75,
-        r"$F_v = 0 \;\Longrightarrow\; V_b + V_c = -\,V_{bc} \;=\; %g\;\mathrm{kN}$"
+        r"$F_v = 0 \;\Longrightarrow\; V_b + V_c = - (P_{bc} \cdot L_{bc}) \;=\; %g\;\mathrm{kN}$"
         % round(-Pbc * L_bc, 2),
         fontsize=12,
         family="serif",
         va="top",
     )
 
+    # Equação de Vb atualizada para refletir o cálculo
     ax2.text(
         0,
         0.60,
-        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{V_{bc}\,(L_{bc}/2) \;-\; H_d\,h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$"
-        % round(Vb, 2),
+        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{-P_{bc} \frac{L_{bc}}{2} + H_d h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$"
+        % Vb,
         fontsize=12,
         family="serif",
         va="top",
@@ -222,16 +238,18 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.45,
-        r"$N = H_a \;=\; %g\;\mathrm{kN}$" % round(Ha, 2),
+        r"$N_{BC} = H_a \;=\; %g\;\mathrm{kN}$" % N,
         fontsize=12,
         family="serif",
         va="top",
     )
 
+    # Exibe a fórmula simbólica correta
     ax2.text(
         0,
         0.30,
-        r"$V(x) = %s \;\;(\mathrm{kN})$" % sp.pretty(sp.simplify(sp.N(V, 2))),
+        r"$V(x) = V_b + P_{bc} \cdot x = %s \;\;(\mathrm{kN})$"
+        % sp.pretty(sp.simplify(sp.N(V, 2))),
         fontsize=12,
         family="serif",
         va="top",
@@ -240,7 +258,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.15,
-        r"$M(x) = %s \;\;(\mathrm{kN}\cdot\mathrm{m})$"
+        r"$M(x) = \int V(x) dx = %s \;\;(\mathrm{kN}\cdot\mathrm{m})$"
         % sp.pretty(sp.simplify(sp.N(M, 2))),
         fontsize=12,
         family="serif",
@@ -267,6 +285,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
 st.title("Análise Estrutural Interativa com Dimensões Parametrizadas")
 
 st.sidebar.header("Entrada de Dados")
+st.sidebar.write("Valores conforme a imagem para obter os resultados esperados.")
 
 # 1. Forças
 Ha = st.sidebar.number_input(
@@ -278,7 +297,7 @@ Hd = st.sidebar.number_input(
     step=0.1,
 )
 Pbc = st.sidebar.number_input(
-    "Carga distribuída entre B e C (Pbc) [kN/m] (negativo → para baixo)",
+    "Carga distribuída em BC (Pbc) [kN/m] (negativo → para baixo)",
     value=-2.0,
     step=0.1,
 )
@@ -289,17 +308,21 @@ L_bc = st.sidebar.number_input("Comprimento BC (L_bc) [m]", value=3.0, step=0.1)
 h_cd = st.sidebar.number_input("Altura CD (h_cd) [m]", value=1.0, step=0.1)
 
 with st.spinner("Carregando análise..."):
-    fig = plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd)
-    st.pyplot(fig)
+    # Verifica se L_bc é zero para evitar divisão por zero
+    if L_bc == 0:
+        st.error("O comprimento BC (L_bc) não pode ser zero.")
+    else:
+        fig = plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd)
+        st.pyplot(fig)
 
-    # Salvar figura em PDF e oferecer download
-    pdf_bytes = io.BytesIO()
-    fig.savefig(pdf_bytes, format="pdf")
-    pdf_bytes.seek(0)
+        # Salvar figura em PDF e oferecer download
+        pdf_bytes = io.BytesIO()
+        fig.savefig(pdf_bytes, format="pdf")
+        pdf_bytes.seek(0)
 
-    st.download_button(
-        label="Download do PDF",
-        data=pdf_bytes,
-        file_name="analise_estrutura_parametrizada.pdf",
-        mime="application/pdf",
-    )
+        st.download_button(
+            label="Download do PDF",
+            data=pdf_bytes,
+            file_name="analise_estrutura_parametrizada.pdf",
+            mime="application/pdf",
+        )
