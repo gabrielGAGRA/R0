@@ -22,7 +22,7 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     # === 1. Equilíbrio Horizontal ===
     # Convenção: Ha (positivo para esquerda), Hd (positivo para direita)
     # Hc é a reação no apoio C. Hc = -Ha(aplicada) - Hd(aplicada)
-    Hc = -Ha - Hd
+    Hc = Ha - Hd
 
     # === 2. Equilíbrio Vertical ===
     Vbc = Pbc * L_bc
@@ -35,7 +35,7 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     # A fórmula da imagem é: Vb*L_bc = (Pbc_mag*L_bc*L_bc/2) - (Hd_mag*h_cd)
     # Para obter Vb = 2kN com Pbc=-2 e Hd=-3:
     # Vb = (-Pbc * L_bc / 2) + (Hd * h_cd / L_bc)
-    Vb = (-Pbc * L_bc / 2) + (Hd * h_cd / L_bc)
+    Vb = (-Pbc * L_bc / 2) - (Hd * h_cd / L_bc)
     Vb = round(Vb, 2)
     Vc = Vb_Vc - Vb
     Vc = round(Vc, 2)
@@ -228,7 +228,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax2.text(
         0,
         0.60,
-        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{-P_{bc} \frac{L_{bc}}{2} + H_d h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$"
+        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{-P_{bc} \frac{L_{bc}}{2} - H_d h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$"
         % Vb,
         fontsize=12,
         family="serif",
@@ -293,7 +293,7 @@ Ha = st.sidebar.number_input(
 )
 Hd = st.sidebar.number_input(
     "Força horizontal em D (Hd) [kN] (positivo → para a direita)",
-    value=-3.0,
+    value=3.0,
     step=0.1,
 )
 Pbc = st.sidebar.number_input(
