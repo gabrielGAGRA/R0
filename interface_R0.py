@@ -20,27 +20,15 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     """
 
     # === 1. Equilíbrio Horizontal ===
-    # Soma das forças horizontais = 0 → Hc + Ha + Hd = 0
     Hc = -Ha - Hd
 
     # === 2. Equilíbrio Vertical ===
-    # Carga distribuída total entre B e C:
-    Vbc = Pbc * L_bc  # (kN)
-    # Como Fv = 0, então Vb + Vc + Vbc = 0 → Vb + Vc = -Vbc
+    Vbc = Pbc * L_bc
     Vb_Vc = -Vbc
 
-    # === 3. Equilíbrio de Momentos (tomando momentos em C) ===
-    # Mc = 0 (ponto de referência)
-    # Momento de Vb: Vb * L_bc (sentido horário positivo)
-    # Momento de Hd em D: Hd * h_cd (sentido horário positivo se Hd aponta para a direita)
-    # Momento da carga distribuída (∀) em BC: resultante Vbc atua em x = L_bc/2
-    #    → Momento = Vbc * (L_bc/2) (sentido anti-horário se Pbc negativa → Vbc negativa)
-    # Equilíbrio: (+Vb * L_bc) + (+Hd * h_cd) + (–Vbc * (L_bc/2)) = 0
-    # → Vb * L_bc = Vbc*(L_bc/2) – Hd*h_cd
+    # === 3. Equilíbrio de Momentos (em C) ===
     Vb = (Vbc * (L_bc / 2) - Hd * h_cd) / L_bc
     Vb = round(Vb, 2)
-
-    # Então Vc = Vb_Vc - Vb
     Vc = Vb_Vc - Vb
     Vc = round(Vc, 2)
 
@@ -50,17 +38,10 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
     N = round(N, 2)
 
     # === 5. Diagramas simbólicos de cortante e momento ao longo de BC ===
-    # Definimos x ∈ [0, L_bc], originando-se em B
     x = sp.Symbol("x", real=True)
-
-    # Simplificação: desconsidera a carga distribuída no diagrama (exemplo pedagógico).
-    # Adota-se diagrama linear de cortante: V(x) = Vb * (1 - x/L_bc)
     V = Vb * (1 - x / L_bc)
-
-    # M(x) = - ∫ V(x) dx
     M = -sp.integrate(V, (x, 0, x))
 
-    # Hc também deve ser arredondado para duas casas
     Hc = round(Hc, 2)
 
     return Hc, Vb, Vc, N, sp.simplify(V), sp.simplify(M)
@@ -68,37 +49,19 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
 
 def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     """
-    Plota a estrutura A–B–C –D e exibe as equações de equilíbrio no
+    Plota a estrutura A–B–C–D e exibe as equações de equilíbrio no
     segundo subplot. Usa os comprimentos L_ab, L_bc, h_cd.
     """
     # 1. Obter resultados numéricos e simbólicos
     Hc, Vb, Vc, N, V, M = resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd)
 
-    # 2. Preparar texto das equações (com valores calculados)
-    texto_eq = (
-        f"Equações fundamentais do equilíbrio\n\n"
-        "I. Equilíbrio Horizontal\n"
-        "   Fh = 0\n"
-        f"   Hc = - Ha - Hd = {round(-Ha - Hd, 2)} kN\n\n"
-        "II. Equilíbrio Vertical\n"
-        "   Fv = 0\n"
-        f"   Vb + Vc = - Vbc = {round(-Pbc * L_bc, 2)} kN\n\n"
-        "III. Equilíbrio de Momentos (em C)\n"
-        "   Mc = 0\n"
-        f"   Vb = (Vbc * {L_bc}/2 - Hd * {h_cd}) / {L_bc} = {round(Vb, 2)} kN\n"
-        f"   N = Fh_barra + Ha = {round(Ha, 2)} kN\n\n"
-        f"   V(x) = {sp.pretty(V)}  kN\n"
-        f"   M(x) = {sp.pretty(M)}  kN·m\n\n"
-        "*Grau de estatisticidade da estrutura: Isostático"
-    )
-
-    # 3. Definição dos nós com base nos parâmetros
+    # 2. Definição dos nós com base nos parâmetros
     A = (-L_ab, 0)
     B = (0, 0)
     C = (L_bc, 0)
     D = (L_bc, h_cd)
 
-    # 4. Criar figura com dois subplots (estrutura e equações)
+    # 3. Criar figura com dois subplots (estrutura e equações)
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=(10, 9), gridspec_kw={"height_ratios": [2, 1]}
     )
@@ -129,7 +92,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         patches.Polygon(tri_c, closed=True, fill=None, edgecolor="green", linewidth=2)
     )
 
-    # Apoio simples em B (triângulo + elipse)
+    # Apoio simples em B (triângulo + duas elipses lado a lado)
     tri_b = [
         [B[0] - 0.3, B[1] - 0.5],
         [B[0] + 0.3, B[1] - 0.5],
@@ -138,12 +101,10 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax1.add_patch(
         patches.Polygon(tri_b, closed=True, fill=None, edgecolor="blue", linewidth=2)
     )
-    # parâmetros da elipse
+    # parâmetros das elipses
     ellipse_w, ellipse_h = 0.2, 0.15
     ellipse_y = B[1] - 0.6
-    offset = (
-        ellipse_w * 0.6
-    )  # distância horizontal entre elas (ajuste conforme preferir)
+    offset = ellipse_w * 0.6  # distância horizontal entre elas
 
     # elipse da esquerda
     ax1.add_patch(
@@ -156,7 +117,6 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
             linewidth=2,
         )
     )
-
     # elipse da direita
     ax1.add_patch(
         patches.Ellipse(
@@ -176,7 +136,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         xytext=(A[0], A[1]),
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(A[0] - 0.6, A[1] + 0.1, f"{round(Ha,2)} kN", color="red")
+    ax1.text(A[0] - 0.6, A[1] + 0.1, f"{round(Ha, 2)} kN", color="red")
 
     # Força horizontal Hd em D (seta para a direita se Hd > 0)
     ax1.annotate(
@@ -185,7 +145,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         xytext=(D[0], D[1]),
         arrowprops=dict(facecolor="red", arrowstyle="->", lw=2),
     )
-    ax1.text(D[0] + 0.3, D[1] + 0.1, f"{round(-Hd,2)} kN", color="red")
+    ax1.text(D[0] + 0.3, D[1] + 0.1, f"{round(-Hd, 2)} kN", color="red")
 
     # Carga distribuída entre B e C: desenhar 4 setas igualmente espaçadas
     for i in range(4):
@@ -199,7 +159,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     ax1.text(
         L_bc / 2,
         0.4,
-        f"{round(-Pbc,2)} kN/m\nDistribuído",
+        f"{round(-Pbc, 2)} kN/m\nDistribuído",
         ha="center",
         color="blue",
     )
@@ -213,7 +173,56 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
 
     # ----------- Exibição das Equações (ax2) -----------
     ax2.axis("off")
-    ax2.text(0, 1, texto_eq, fontsize=11, family="monospace", va="top")
+
+    # Título em negrito (fonte serif)
+    ax2.text(
+        0, 1.00,
+        "Equações Fundamentais do Equilíbrio",
+        fontsize=14, fontweight="bold", family="serif", va="top"
+    )
+
+    ax2.text(
+        0, 0.90,
+        r"$F_h = 0 \;\Longrightarrow\; H_c = -\,H_a - H_d \;=\; %g\;\mathrm{kN}$" % round(-Ha - Hd, 2),
+        fontsize=12, family="serif", va="top"
+    )
+
+    ax2.text(
+        0, 0.75,
+        r"$F_v = 0 \;\Longrightarrow\; V_b + V_c = -\,V_{bc} \;=\; %g\;\mathrm{kN}$" % round(-Pbc * L_bc, 2),
+        fontsize=12, family="serif", va="top"
+    )
+
+    ax2.text(
+        0, 0.60,
+        r"$M_C = 0 \;\Longrightarrow\; V_b = \frac{V_{bc}\,(L_{bc}/2) \;-\; H_d\,h_{cd}}{L_{bc}} \;=\; %g\;\mathrm{kN}$" % round(Vb, 2),
+        fontsize=12, family="serif", va="top"
+    )
+
+    ax2.text(
+        0, 0.45,
+        r"$N = H_a \;=\; %g\;\mathrm{kN}$" % round(Ha, 2),
+        fontsize=12, family="serif", va="top"
+    )
+
+    ax2.text(
+        0, 0.30,
+        r"$V(x) = %s \;\;(\mathrm{kN})$" % sp.pretty(V),
+        fontsize=12, family="serif", va="top"
+    )
+
+    ax2.text(
+        0, 0.15,
+        r"$M(x) = %s \;\;(\mathrm{kN}\cdot\mathrm{m})$" % sp.pretty(M),
+        fontsize=12, family="serif", va="top"
+    )
+
+    # Frase final em itálico (fonte serif)
+    ax2.text(
+        0, 0.05,
+        "Grau de estatisticidade: Isostático",
+        fontsize=11, family="serif", fontstyle="italic", va="top"
+    )
 
     plt.tight_layout()
     return fig
@@ -241,9 +250,15 @@ Pbc = st.sidebar.number_input(
 )
 
 # 2. Dimensões da estrutura
-L_ab = st.sidebar.number_input("Comprimento AB (L_ab) [m]", value=1.0, step=0.1)
-L_bc = st.sidebar.number_input("Comprimento BC (L_bc) [m]", value=3.0, step=0.1)
-h_cd = st.sidebar.number_input("Altura CD (h_cd) [m]", value=1.0, step=0.1)
+L_ab = st.sidebar.number_input(
+    "Comprimento AB (L_ab) [m]", value=1.0, step=0.1
+)
+L_bc = st.sidebar.number_input(
+    "Comprimento BC (L_bc) [m]", value=3.0, step=0.1
+)
+h_cd = st.sidebar.number_input(
+    "Altura CD (h_cd) [m]", value=1.0, step=0.1
+)
 
 with st.spinner("Carregando análise..."):
     fig = plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd)
