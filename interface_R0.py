@@ -6,27 +6,29 @@ import io
 
 
 def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
-    """
-    Calcula as reações e os esforços internos da estrutura.
-    """
-    Hc = -Ha - Hd  # Changed from Ha - Hd
+    # Equilíbrio horizontal: Hc = -Ha - Hd
+    Hc = -Ha - Hd
 
+    # Equilíbrio vertical: Vb + Vc = Pbc * L_bc
     Vbc = Pbc * L_bc
-    Vb_Vc = Vbc  # Changed from -Vbc. Represents Vb + Vc = Pbc * L_bc
+    Vb_Vc = Vbc
+    # Momento em C: Vb = (Pbc * L_bc^2 / 2 - Hd * h_cd) / L_bc
     Vb = (Pbc * L_bc**2 / 2 - Hd * h_cd) / L_bc
     Vb = round(Vb, 2)
 
     Vc = Vb_Vc - Vb
     Vc = round(Vc, 2)
 
+    # Força normal na barra BC: N = -Ha
     Fh_barra = 0
-    N = Fh_barra - Ha  # Changed from Fh_barra + Ha
+    N = Fh_barra - Ha
     N = round(N, 2)
 
     x = sp.Symbol("x", real=True)
-    V = Vb - Pbc * x  # Changed from Vb + Pbc * x
+    # Função cortante: V(x) = Vb - Pbc * x
+    V = Vb - Pbc * x
 
-    # Integra V(x) para obter o Momento M(x)
+    # Função momento fletor: M(x) = ∫V(x)dx
     M = sp.integrate(V, (x, 0, x))
     M_expanded = sp.expand(M)
 
@@ -36,9 +38,6 @@ def resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd):
 
 
 def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
-    """
-    Plota a representação da estrutura, as forças e as equações de equilíbrio.
-    """
     Hc, Vb, Vc, N, V, M, M_expanded = resolver_estrutura(Ha, Hd, Pbc, L_bc, h_cd)
 
     A = (-L_ab, 0)
@@ -50,16 +49,13 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         2, 1, figsize=(10, 9), gridspec_kw={"height_ratios": [2, 1]}
     )
 
-    # Desenha as barras da estrutura
     ax1.plot([A[0], B[0]], [A[1], B[1]], "k-", linewidth=2.5)
     ax1.plot([B[0], C[0]], [B[1], C[1]], "k-", linewidth=2.5)
     ax1.plot([C[0], D[0]], [C[1], D[1]], "k-", linewidth=2.5)
 
-    # --- Desenho dos Apoios (Escalável e Sólido) ---
     support_height = 0.08 * max(L_bc, h_cd, 2)
     support_base_width = support_height * 1.5
 
-    # Apoio C (Articulado)
     tri_c_verts = [
         [C[0], C[1]],
         [C[0] - support_base_width / 2, C[1] - support_height],
@@ -92,7 +88,6 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
             linewidth=1,
         )
 
-    # Apoio B (Simples/Rolo)
     tri_b_verts = [
         [B[0], B[1]],
         [B[0] - support_base_width / 2, B[1] - support_height],
@@ -132,9 +127,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         "k-",
         linewidth=1.5,
     )
-    # --- Fim do Desenho dos Apoios ---
 
-    # Rótulos dos pontos
     for point, label, dx, dy in zip(
         [A, B, C, D],
         ["A", "B\n(Apoio Simples)", "     C\n  (Apoio Articulado)", "D"],
@@ -144,14 +137,12 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         ax1.plot(point[0], point[1], "ko")
         ax1.text(point[0] + dx, point[1] + dy, label, fontsize=10, ha="center")
 
-    # --- Setas das Forças (Mais Distintas) ---
     arrow_props_h = dict(
         facecolor="red", arrowstyle="->,head_width=0.5,head_length=1.0", lw=2.5
     )
 
-    # Força Ha
     ha_magnitude = abs(Ha)
-    if Ha <= 0:  # Positive Ha is to the right, so arrow to the left if Ha is negative
+    if Ha <= 0:
         start_point_ha, end_point_ha = (A[0], A[1]), (A[0] - 0.5, A[1])
         text_pos_ha_x = A[0] - 0.6
     else:
@@ -168,7 +159,6 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         ha="center",
     )
 
-    # Força Hd
     hd_magnitude = abs(Hd)
     if Hd >= 0:
         start_point, end_point = (D[0], D[1]), (D[0] + 0.5, D[1])
@@ -186,7 +176,6 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         fontweight="bold",
     )
 
-    # Carga distribuída Pbc
     arrow_props_v = dict(
         facecolor="blue", arrowstyle="->,head_width=0.4,head_length=0.8", lw=1.5
     )
@@ -205,12 +194,11 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     )
 
     ax1.set_xlim(-L_ab - 1, L_bc + 1)
-    ax1.set_ylim(-1.5 * support_height, h_cd + 1)  # Ajuste de Ylim para acomodar apoios
+    ax1.set_ylim(-1.5 * support_height, h_cd + 1)
     ax1.set_aspect("equal")
     ax1.set_title("Representação Estrutural e Forças", fontsize=16, family="serif")
     ax1.grid(True)
 
-    # --- Equações (Fonte Melhorada e Desenvolvimento) ---
     ax2.axis("off")
     eq_font_size = 12
     eq_font_family = "serif"
@@ -284,8 +272,7 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
         va="top",
     )
 
-    # --- "Grau de Estatisticidade" (Formatado) ---
-    ax2.axhline(y=0.08, color="gray", linestyle="--", linewidth=0.8, xmin=0, xmax=0.8)
+    # Grau de estatisticidade: Isostático
     ax2.text(
         0,
         0.0,
@@ -300,7 +287,6 @@ def plot_estrutura_e_equacoes(Ha, Hd, Pbc, L_ab, L_bc, h_cd):
     return fig
 
 
-# --- Interface do Streamlit (sem alterações) ---
 st.title("Análise Estrutural Interativa com Dimensões Parametrizadas")
 
 st.sidebar.header("Entrada de Dados")
